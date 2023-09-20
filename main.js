@@ -178,6 +178,24 @@ const addQuickNote = () => {
       .then((file) => leaf.openFile(file, openMode));
     showWindows();
   },
+  openHomeNote = () => {
+      const { homeNoteLocation } = plugin.settings,
+        name = obsidian
+          .normalizePath(`${homeNoteLocation ?? ""}.md`)
+          .replace(/\*|"|\\|<|>|:|\||\?/g, "-"),
+        // manually create and open file instead of depending
+        // on createAndOpenMarkdownFile to force file creation
+        // relative to the root instead of the active file
+        // (in case user has default location for new notes
+        // set to "same folder as current file")
+        leaf = plugin.app.workspace.getLeaf(),
+        openMode = { active: true, state: { mode: "source" } },
+        file = plugin.app.vault.getAbstractFileByPathInsensitive(name);
+      if (file != null) {
+        leaf.openFile(file, openMode);
+        showWindows();
+      }
+  },
   replaceVaultName = (str) => {
     return str.replace(/{{vault}}/g, plugin.app.vault.getName());
   },
@@ -230,12 +248,15 @@ const addQuickNote = () => {
 const registerHotkeys = () => {
     log(LOG_REGISTER_HOTKEY);
     try {
-      const { toggleWindowFocusHotkey, quickNoteHotkey } = plugin.settings;
+      const { toggleWindowFocusHotkey, quickNoteHotkey, homeNoteHotkey } = plugin.settings;
       if (toggleWindowFocusHotkey) {
         globalShortcut.register(toggleWindowFocusHotkey, toggleWindows);
       }
       if (quickNoteHotkey) {
         globalShortcut.register(quickNoteHotkey, addQuickNote);
+      }
+      if (homeNoteHotkey) {
+        globalShortcut.register(homeNoteHotkey, openHomeNote);
       }
     } catch {}
   },
@@ -244,6 +265,7 @@ const registerHotkeys = () => {
     try {
       globalShortcut.unregister(plugin.settings.toggleWindowFocusHotkey);
       globalShortcut.unregister(plugin.settings.quickNoteHotkey);
+      globalShortcut.unregister(plugin.settings.homeNoteHotkey);
     } catch {}
   };
 
@@ -355,6 +377,21 @@ const OPTIONS = [
     desc: ACCELERATOR_FORMAT,
     type: "hotkey",
     default: "CmdOrCtrl+Shift+Q",
+    onBeforeChange: unregisterHotkeys,
+    onChange: registerHotkeys,
+  },
+  "Home note",
+  {
+    key: "homeNoteLocation",
+    desc: "Path for the home note you want to open quickly.",
+    type: "text",
+    placeholder: "Example: notes/HomeNote",
+  },
+  {
+    key: "homeNoteHotkey",
+    desc: ACCELERATOR_FORMAT,
+    type: "hotkey",
+    default: "CmdOrCtrl+Shift+H",
     onBeforeChange: unregisterHotkeys,
     onChange: registerHotkeys,
   },

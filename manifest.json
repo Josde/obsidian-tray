@@ -1,6 +1,6 @@
 {
-  "id": "tray",
-  "name": "Tray",
+  "id": "tray-fork",
+  "name": "Tray-fork",
   "author": "dragonwocky",
   "authorUrl": "https://dragonwocky.me/",
   "description": "Run Obsidian from the system tray for customisable window management & global quick notes",
